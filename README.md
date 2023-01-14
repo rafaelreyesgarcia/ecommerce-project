@@ -1,38 +1,87 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+refactor data fetching using next.js `getStaticProps` instead of `useEffect`
 
-## Getting Started
+```jsx
+// useEffect
+import { useEffect, useState } from 'react';
 
-First, run the development server:
+export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [phrase, setPhrase] = useState(['']);
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+  useEffect( () => {
+    fetch('/api/products')
+      .then(response => response.json())
+      .then(json => setProductsInfo(json));
+    // console.log(productsInfo);
+  }, []);
+
+  const categoryNames = [...new Set(products.map(p => p.category))];
+
+  if (phrase) {
+    products = productsInfo.filter(p => p.name.toLowerCase().includes(phrase));
+  }
+
+  return (
+    <input 
+      type="text" 
+      placeholder="Search for products..." 
+      className="bg-gray-100 w-full py-2 px-4 rounded-xl text-stone-400" 
+      value={phrase}
+      onChange={e => setPhrase(e.target.value)}
+    />
+  )
+}
+
+// refactor to data fetch using getStaticProps
+export async function getServerSideProps() {
+  await initMongo();
+  const products = await findAllProducts();
+  return {
+    props: {
+      products: JSON.parse(JSON.stringify(products)),
+    },
+  };
+}
+
+export default function Home({products}) {
+  const categoryNames = [...new Set(products.map(p => p.category))];
+  if (phrase) {
+    products = products.filter(p => p.name.toLowerCase().includes(phrase));
+  } 
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+refactor products api
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+```jsx
+// everything is done inside of handle
+import { initMongo } from "@/lib/mongo";
+import Product from "@/models/product";
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+export default async function handle(req, res) {
+  await initMongo();
+  res.json( await Product.find().exec());
+}
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+// interacting with the model
+export async function findAllProducts() {
+  return Product.find().exec();
+}
+// initializing mongoose
+export default async function handle(req, res) {
+  await initMongo();
+  res.json( await findAllProducts());
+}
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+next.js throws error serializing object due to mongoose `_id` property.
 
-## Learn More
+`JSON.parse` and `JSON.stringify` is a fix for this for deep cloning
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```jsx
+return {
+  props: {
+    products: JSON.parse(JSON.stringify(products)),
+  },
+};
+```
