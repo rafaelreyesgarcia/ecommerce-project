@@ -2,6 +2,8 @@ import { useState } from "react"
 import Product from "@/components/product";
 import { initMongo } from "@/lib/mongo";
 import { findAllProducts } from "./api/products";
+import Layout from "@/components/Layout";
+import Footer from "@/components/Footer";
 
 export async function getServerSideProps() {
   await initMongo();
@@ -28,7 +30,7 @@ export default function Home({products}) {
 
   return (
     <>
-      <div className="p-5">
+      <Layout>
         <input 
           type="text" 
           placeholder="Search for products..." 
@@ -54,8 +56,7 @@ export default function Home({products}) {
             </div>
           ))}
         </div>
-        {/* <h2 className="text-2xl">Phones</h2> */}
-      </div>
+      </Layout>
     </>
   )
 }

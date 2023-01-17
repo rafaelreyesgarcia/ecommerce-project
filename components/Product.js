@@ -1,9 +1,19 @@
+import { useContext } from "react"
+import { ProductsContext } from "./ProductsContext";
+
 export default function Product({
   name,
   price,
   description,
-  img
+  img,
+  _id
 }) {
+  const {setSelectedProducts} = useContext(ProductsContext);
+
+  function addProduct() {
+    setSelectedProducts(prev => [...prev, _id]);
+  }
+
   return (
     <div className="py-4">
       <div className="w-64">
@@ -13,12 +23,19 @@ export default function Product({
         <div className="mt-2">
           <h3 className="font-bold text-lg">{name}</h3>
         </div>
-        <p className="text-sm mt-2 leading-4">
+        <p className="text-sm mt-2 leading-4 text-gray-400">
           {description}
         </p>
         <div className="flex mt-1">
-          <div className="text-2xl font-bold grow">{price}</div>
-          <button className="bg-emerald-400 text-white py-1 px-3 rounded-xl">+</button>
+          <div className="text-2xl font-bold grow">${price}</div>
+          <button 
+            className="
+            bg-emerald-400 text-white py-1 px-3 rounded-xl
+            "
+            onClick={addProduct} 
+          >
+            +
+          </button>
         </div>
       </div>
     </div>
